@@ -17,70 +17,42 @@
     </bean>
 
     <!--3. 实现realm-->
-    <bean id="jdbcRealm" class="org.apache.shiro.samples.spring.realm.SaltAwareJdbcRealm">
-        <property name="name" value="jdbcRealm"/>
-        <property name="dataSource" ref="dataSource"/>
+    <bean id="jdbcRealm" class="com.shiro.realms.ShiroRealm">
         <property name="credentialsMatcher">
             <bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
-                <property name="hashAlgorithmName" value="SHA-256"/>
-                <!-- true means hex encoded, false means base64 encoded -->
-                <property name="storedCredentialsHexEncoded" value="false"/>
+                <property name="hashAlgorithmName" value="MD5"></property><!--对密码加密的方式-->
+                <property name="hashIterations" value="1024"></property><!--对密码加密的次数-->
             </bean>
         </property>
     </bean>
 
-    <!-- =========================================================
-         Shiro Spring-specific integration
-         ========================================================= -->
-    <!-- Post processor that automatically invokes init() and destroy() methods
-         for Spring-configured Shiro objects so you don't have to
-         1) specify an init-method and destroy-method attributes for every bean
-            definition and
-         2) even know which Shiro objects require these methods to be
-            called. -->
+    <!--4. 配置lifecycleBeanPostProcessor -->
     <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
 
-    <!-- Enable Shiro Annotations for Spring-configured beans.  Only run after
-         the lifecycleBeanProcessor has run: -->
+    <!--5. 启用ioc容器中使用shiro的注解,必须配置4才能使用 -->
     <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
           depends-on="lifecycleBeanPostProcessor"/>
     <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
         <property name="securityManager" ref="securityManager"/>
     </bean>
 
-    <!-- Secure Spring remoting:  Ensure any Spring Remoting method invocations can be associated
-         with a Subject for security checks. -->
-    <bean id="secureRemoteInvocationExecutor" class="org.apache.shiro.spring.remoting.SecureRemoteInvocationExecutor">
-        <property name="securityManager" ref="securityManager"/>
-    </bean>
-
-    <!-- Define the Shiro Filter here (as a FactoryBean) instead of directly in web.xml -
-         web.xml uses the DelegatingFilterProxy to access this bean.  This allows us
-         to wire things with more control as well utilize nice Spring things such as
-         PropertiesPlaceholderConfigurer and abstract beans or anything else we might need: -->
+    <!--6. 配置shiroFilter id必须和web.xml文件中的filter-name一致
+            shiro从ioc容器中查找和web.xml文件中的filter-name名字对应的filter bean-->
     <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
         <property name="securityManager" ref="securityManager"/>
-        <property name="loginUrl" value="/s/login"/>
-        <property name="successUrl" value="/s/index"/>
-        <property name="unauthorizedUrl" value="/s/unauthorized"/>
-        <!-- The 'filters' property is not necessary since any declared javax.servlet.Filter bean
-             defined will be automatically acquired and available via its beanName in chain
-             definitions, but you can perform overrides or parent/child consolidated configuration
-             here if you like: -->
-        <!-- <property name="filters">
-            <util:map>
-                <entry key="aName" value-ref="someFilterPojo"/>
-            </util:map>
-        </property> -->
+        <property name="loginUrl" value="/login.jsp"/>
+        <property name="successUrl" value="/list.jsp"/>
+        <property name="unauthorizedUrl" value="/unauthorized.jsp"/>
+        <!--anno可以被匿名访问
+            authc必须认证
+            logout登出
+            roles角色过滤器-->
         <property name="filterChainDefinitions">
             <value>
-                /favicon.ico = anon
-                /logo.png = anon
-                /shiro.css = anon
-                /s/login = anon
-                # allow WebStart to pull the jars for the swing app:
-                /*.jar = anon
-                # everything else requires authentication:
+                <!--跟配置顺序有关系-->
+                /login.jsp = anon
+                /shiro/login = anon
+                /shiro/logout = logout
                 /** = authc
             </value>
         </property>
