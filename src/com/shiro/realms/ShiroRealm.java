@@ -1,17 +1,46 @@
 package com.shiro.realms;
 
 import org.apache.shiro.authc.*;
+import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.crypto.hash.SimpleHash;
 import org.apache.shiro.realm.AuthenticatingRealm;
+import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.realm.Realm;
+import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by enum on 2018/1/24.
  */
-public class ShiroRealm extends AuthenticatingRealm{//只做认证实现此接口即可
+public class ShiroRealm extends AuthorizingRealm{//AuthenticatingRealm{//只做认证实现此接口即可
 
+    //授权
     @Override
+    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
+        //1.得到登入信息
+        Object principal = principalCollection.getPrimaryPrincipal();
+        //2.利用登入的用户信息来获取当前用户的角色或权限
+        Set<String> roles = new HashSet<>();
+        roles.add("user");
+        if ("admin".equals(principal)){
+            roles.add("admin");
+        }
+        //3.创建SimpleAuthorizationInfo，并设置roles属性
+        SimpleAuthorizationInfo info = new SimpleAuthorizationInfo(roles);
+        return info;
+    }
+
+    //授权
+    @Override
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
+        return null;
+    }
+
+    /*@Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         System.out.println("----->>>doGetAuthenticationInfo " + token);
         UsernamePasswordToken upToken = (UsernamePasswordToken) token;
@@ -49,5 +78,5 @@ public class ShiroRealm extends AuthenticatingRealm{//只做认证实现此接�
         int hashIterations = 1024;      //加密次数
         Object result = new SimpleHash(algorithmName, source, salt, hashIterations);
         System.out.println(result);
-    }
+    }*/
 }

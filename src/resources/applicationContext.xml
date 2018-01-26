@@ -56,6 +56,8 @@
         <property name="securityManager" ref="securityManager"/>
     </bean>
 
+    <bean id="shiroService" class="com.shiro.service.ShiroService"></bean>
+
     <!--6. 配置shiroFilter id必须和web.xml文件中的filter-name一致
             shiro从ioc容器中查找和web.xml文件中的filter-name名字对应的filter bean-->
     <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
@@ -73,6 +75,8 @@
                 /login.jsp = anon
                 /shiro/login = anon
                 /shiro/logout = logout
+                /admin.jsp = roles[admin]
+                /user.jsp = roles[user]
                 /** = authc
             </value>
         </property>
